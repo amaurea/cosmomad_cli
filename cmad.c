@@ -26,6 +26,39 @@ double afun(Csm_params* p, double a) { return a; }
 double rt(Csm_params* p, double a) { return csm_cosmic_time(p, 1.0)-csm_cosmic_time(p,a); }
 double zfun(Csm_params* p, double a) { return 1/a-1; }
 
+void help() {
+	fprintf(stderr, "cmad: Commandline-interface to David Alonso's Cosmomad library\n"
+			"Usage: cmad [-n] [-a0] [-a1] [-T] [-h] [-w] [-wa] [-Ob] [-Ol] [-Om] [-v] [-q] [-phys] [-nophys] fields...\n"
+			" Options:\n"
+			"  -n:  Number of sample points. Default: 1000\n"
+			"  -a0, -a1: Smallest and largest scale factor. Default: 0 and 1\n"
+			"  -T: CMB temperature in K\n"
+			"  -H: Reduced hubble constant h\n"
+			"  -w, -a: Dark energy equation of state today, and its derivative by a\n"
+			"  -Ob, -Ol -Om: Omega_baryon, Omega_lambda and Omega_matter\n"
+			"  -v: verbose mode\n"
+			"  -q: quiet mode\n"
+			"  -phys, -nophys: Enable or disable physical quantities where the"
+			"     value of h is taken into account. Default: enable\n"
+			"  -h: Display this help message\n"
+			"\n"
+			" Fields:\n"
+			"  z: The redshift\n"
+			"  a: The scale factor\n"
+			"  t: The time since the big bang, in Gyr\n"
+			"  rt: The time before now in Gyr\n"
+			"  H: The Hubble parameter in km/s/Mpc\n"
+			"  dA: The angular diameter distance from us, in Mpc\n"
+			"  dL: The luminosity distance from us, in Mpc\n"
+			"  chi: Comoving distance from us, in Mpc\n"
+			"  r: Curvature comoving distance in Mpc\n"
+			"  chi_p: Particle horizon size in Mpc\n"
+			"  bao: Baryon-Acoustic Osciallation scale in degrees\n"
+			"  D: The linear growth factor\n"
+			"  f: f growth factor\n");
+	exit(1);
+}
+
 int main(int argc, char ** argv)
 {
 	double
@@ -52,7 +85,7 @@ int main(int argc, char ** argv)
 		else if(!strcmp(*i, "-a0"))  a0 = atof(*++i);
 		else if(!strcmp(*i, "-a1"))  a1 = atof(*++i);
 		else if(!strcmp(*i, "-T"))   T  = atof(*++i);
-		else if(!strcmp(*i, "-h"))   h  = atof(*++i);
+		else if(!strcmp(*i, "-H"))   h  = atof(*++i);
 		else if(!strcmp(*i, "-w"))   w  = atof(*++i);
 		else if(!strcmp(*i, "-wa"))  wa = atof(*++i);
 		else if(!strcmp(*i, "-Ob"))  omega_b = atof(*++i);
@@ -76,17 +109,17 @@ int main(int argc, char ** argv)
 		else if(!strcmp(*i, "rt"))   add_field(fields, units, funcs, &nfield, *i, 1, rt);
 		else if(!strcmp(*i, "z"))    add_field(fields, units, funcs, &nfield, *i, 0, zfun);
 		else {
-			fprintf(stderr, "Unrecognized field '%s'!\n", *i);
-			exit(1);
+			fprintf(stderr, "Unrecognized argument '%s'\n\n", *i);
+			help();
 		}
 	if(nfield == 0)
 	{
-		fprintf(stderr, "Specify at least one output field!\n");
-		exit(1);
+		fprintf(stderr, "Specify at least one output field!\n\n");
+		help();
 	}
-	csm_set_verbosity(verbosity);
 	Csm_params * params = csm_params_new();
 	csm_background_set(params, omega_m, omega_l, omega_b, w, wa, h, T);
+	csm_set_verbosity(params, verbosity);
 	for(ia=0; ia<na; ia++)
 	{
 		double a = a0+(a1-a0)*ia/(na-1);
